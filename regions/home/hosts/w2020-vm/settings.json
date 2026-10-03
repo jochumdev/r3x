@@ -1,0 +1,4 @@
+{
+  "template": "desktop-vm",
+  "disk": "/dev/sda"
+}

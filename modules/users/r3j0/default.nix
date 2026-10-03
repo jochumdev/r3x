@@ -1,0 +1,87 @@
+{
+  den,
+  r3x,
+  ...
+}:
+{
+  den.aspects."r3j0" = {
+    includes = [
+      r3x.everywhere
+      (den.lib.policy.when ({ host, ... }: host.hasAspect r3x.services.incus) {
+        nixos.users.users."r3j0".extraGroups = [ "incus-admin" ];
+      })
+    ];
+
+    homeManager =
+      { lib, ... }:
+      {
+        xdg.configFile."bat/config".source = ./dots/config/bat/config;
+        programs.ssh = {
+          enable = true;
+          enableDefaultConfig = false;
+          settings = {
+            "*" = {
+              IdentityFile = [
+                "~/.ssh/id_ed25519_sk"
+                "~/.ssh/id_ed25519_sk_2"
+                "~/.ssh/id_ed25519_sk_backup"
+                "~/.ssh/id_ed25519"
+              ];
+            };
+          };
+        };
+
+        programs.git.signing = {
+          key = "~/.ssh/id_ed25519_sk.pub";
+          signByDefault = true;
+        };
+
+        programs.jujutsu.settings = {
+          signing.key = lib.mkForce "~/.ssh/id_ed25519_sk.pub";
+          templates.commit_trailers = "format_signed_off_by_trailer(self)";
+        };
+      };
+
+    nixos =
+      {
+        config,
+        host,
+        lib,
+        ...
+      }:
+      let
+        regionDir =
+          if config ? settings && config.settings ? region && config.settings.region != null then
+            config.settings.region
+          else
+            "home";
+        shadowPath = ../../../regions + "/${regionDir}/users/r3j0/secrets/shadow.age";
+      in
+      lib.mkMerge [
+        {
+          users.users."r3j0" = {
+            openssh.authorizedKeys.keyFiles = [
+              ./authorized_keys
+            ];
+            extraGroups = [
+              "ssh"
+              "media"
+            ];
+          };
+        }
+
+        (lib.optionalAttrs (!host.iso) (
+          lib.mkIf (config.vaultix.enable && builtins.pathExists shadowPath) {
+            users.users."r3j0".hashedPasswordFile = config.vaultix.secrets.shadow_r3j0.path;
+
+            vaultix = {
+              secrets.shadow_r3j0 = {
+                file = shadowPath;
+              };
+              beforeUserborn = [ "shadow_r3j0" ];
+            };
+          }
+        ))
+      ];
+  };
+}

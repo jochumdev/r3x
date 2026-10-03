@@ -1,0 +1,18 @@
+{ lib, ... }:
+{
+  r3x.graphical.xfce = {
+    nixos = {
+      services.xserver = {
+        enable = true;
+        desktopManager = {
+          xterm.enable = false;
+          xfce.enable = true;
+        };
+      };
+      services.displayManager = {
+        defaultSession = lib.mkDefault "xfce";
+        enable = true;
+      };
+    };
+  };
+}

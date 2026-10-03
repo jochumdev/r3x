@@ -1,0 +1,7 @@
+#       Serial: 35796743, Slot: 1
+#         Name: age identity ac134c4d
+#      Created: Tue, 29 Sep 2026 20:54:39 +0000
+#   PIN policy: Never  (A PIN is NOT required to decrypt)
+# Touch policy: Never  (A physical touch is NOT required to decrypt)
+#    Recipient: age1yubikey1qws76gqpf0pghssv2kkcqe6xpenjvzpqus6leyqsxz50722z7qv2wx3s49g
+AGE-PLUGIN-YUBIKEY-1QUMJYQ5Z4SF5CNGC0KTVD

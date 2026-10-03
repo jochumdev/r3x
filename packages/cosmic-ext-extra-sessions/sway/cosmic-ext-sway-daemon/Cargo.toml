@@ -1,0 +1,14 @@
+[package]
+name = "cosmic-ext-sway-daemon"
+version = "0.1.0"
+edition = "2021"
+authors = ["Victoria Brekenfeld <github@drakulix.de>"]
+license = "GPL-3.0-only"
+
+[dependencies]
+anyhow = "1.0.91"
+calloop = "0.14.1"
+libcosmic = { git = "https://github.com/pop-os/libcosmic.git" }
+cosmic-config = { git = "https://github.com/pop-os/libcosmic.git" }
+cosmic-theme = { git = "https://github.com/pop-os/libcosmic.git" }
+swayipc = "3.0.2"

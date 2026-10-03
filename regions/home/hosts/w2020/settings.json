@@ -1,0 +1,4 @@
+{
+  "template": "desktop",
+  "disk": "/dev/nvme0n1"
+}

@@ -1,0 +1,10 @@
+work
+.devenv
+.direnv
+.DS_Store
+result
+
+# OpenTofu
+infra/opentofu/.terraform/
+infra/opentofu/state/
+infra/opentofu/*.tfstate*
