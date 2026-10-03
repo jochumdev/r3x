@@ -1,4 +1,11 @@
 {
   "template": "desktop-vm",
-  "disk": "/dev/sda"
+  "disk": "/dev/sda",
+  "users": {
+    "users": {
+      "r3j0": {
+        "groups": ["wheel", "networkmanager", "incus-admin"]
+      }
+    }
+  }
 }

@@ -86,21 +86,28 @@ Host declarations live under `regions/<region>/hosts/<host>/`.
 
 ### Current Hosts
 
-| Target          | Region | Host       | Template       | Platform     | Users (Primary first) |
-| --------------- | ------ | ---------- | -------------- | ------------ | --------------------- |
-| `home-w2020`    | `home` | `w2020`    | `desktop`      | x86_64-linux | `r3j0`                |
-| `home-w2020-vm` | `home` | `w2020-vm` | `desktop-vm`   | x86_64-linux | `r3j0`                |
-| `home-dev01`    | `home` | `dev01`    | `devcontainer` | x86_64-linux | `r3j0`                |
-| `live`          | —      | `live`     | `live`         | x86_64-linux | `nixos`               |
+| Target          | Region | Host       | Template       | Platform     | Users                    |
+| --------------- | ------ | ---------- | -------------- | ------------ | ------------------------ |
+| `home-w2020`    | `home` | `w2020`    | `desktop`      | x86_64-linux | `r3j0`                   |
+| `home-w2020-vm` | `home` | `w2020-vm` | `desktop-vm`   | x86_64-linux | `r3j0`                   |
+| `home-dev01`    | `home` | `dev01`    | `devcontainer` | x86_64-linux | `r3j0`, `r3j0-2`         |
+| `live`          | —      | `live`     | `live`         | x86_64-linux | `nixos`                  |
 
 ---
 
 ## User Management (`settings.users`)
 
-The host configuration strictly requires `settings.users = [ "a", "b", "c" ]` (no string coercion):
+Host configurations specify users and their groups directly in `settings.json`:
 
-- **Primary User**: The first user in the list (`a`) is designated as `settings.primaryUser` and automatically receives `den.provides.primary-user`, granting administrative privileges (`wheel`, `networkmanager`).
-- **Secondary Users**: Subsequent users (`b`, `c`) are provisioned as standard non-privileged accounts via `den.provides.define-user`.
+```json
+"users": {
+  "r3j0": {
+    "groups": ["wheel", "networkmanager"]
+  }
+}
+```
+
+- **Group Control**: Groups such as `wheel` (for `sudo` access) and `networkmanager` are configured explicitly per user per host rather than relying on list order.
 - **U2F Authentication**: `/etc/u2f_mappings` dynamically aggregates credentials from `modules/users/<user>/u2f_mappings` for all users active on the host.
 
 ---
@@ -304,7 +311,7 @@ just local-install [host] [region]
 just deploy <region> <host> [remote]
 
 # Remote rebuild switch over SSH
-just deploy-switch <host> <target-ssh-host>
+just deploy-switch <region> <host> [target-ssh-host] [args...]
 
 # Rotate host SSH keys (ed25519, rsa, or all) and update Vaultix cache
 just rotate-ssh <region> <host> [all|ed25519|rsa]

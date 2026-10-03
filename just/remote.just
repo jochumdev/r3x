@@ -148,8 +148,20 @@ deploy region host remote="local-https" *args:
     echo "==> $host deployed successfully to {{ remote }}!"
     incus list "{{ remote }}:" "$host"
 
-deploy-switch host target *args:
-    nixos-rebuild switch --flake ".#{{ host }}" --target-host "{{ target }}" --elevate=sudo --ask-elevate-password {{ args }}
+deploy-switch region host target=host *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    region="{{ region }}"
+    host="{{ host }}"
+    target="{{ target }}"
+    extra_args=()
+    if [[ "$target" == -* ]]; then
+      extra_args+=("$target")
+      target="$host"
+    fi
+    nix_target="${host#${region}-}"
+    nix_target="${region}-${nix_target}"
+    nixos-rebuild switch --flake ".#${nix_target}" --target-host "${target}" --elevate=sudo --ask-elevate-password "${extra_args[@]}" {{ args }}
 
 rotate-ssh region host type="all":
     #!/usr/bin/env bash

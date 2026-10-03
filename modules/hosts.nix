@@ -75,20 +75,40 @@ let
         else if flatSettings ? user then
           flatSettings.user
         else
-          [ "r3j0" ];
+          { r3j0 = { }; };
+
+      usersAttr =
+        if builtins.isAttrs rawUsers then
+          rawUsers
+        else if builtins.isList rawUsers then
+          builtins.listToAttrs (
+            map (
+              u:
+              if builtins.isAttrs u then
+                {
+                  inherit (u) name;
+                  value = removeAttrs u [ "name" ];
+                }
+              else
+                {
+                  name = u;
+                  value = { };
+                }
+            ) rawUsers
+          )
+        else
+          throw "Host '${targetName}': settings.users must be an attribute set or list of users";
 
       userValidation =
-        assert lib.assertMsg (builtins.isList rawUsers)
-          "Host '${targetName}': settings.users must be a list of strings (no coercion allowed)";
-        assert lib.assertMsg (rawUsers != [ ]) "Host '${targetName}': settings.users must not be empty";
-        assert lib.assertMsg (lib.all (u: builtins.isString u || (builtins.isAttrs u && u ? name)) rawUsers)
-          "Host '${targetName}': elements of settings.users must be strings or attribute sets with a 'name'";
+        assert lib.assertMsg (builtins.isAttrs usersAttr)
+          "Host '${targetName}': settings.users must be an attribute set or list of users";
+        assert lib.assertMsg (usersAttr != { }) "Host '${targetName}': settings.users must not be empty";
+        assert lib.assertMsg (lib.all (u: builtins.isAttrs usersAttr.${u}) (
+          builtins.attrNames usersAttr
+        )) "Host '${targetName}': user definitions in settings.users must be attribute sets";
         true;
 
-      userNames = builtins.seq userValidation (
-        map (u: if builtins.isAttrs u then u.name else u) rawUsers
-      );
-      primaryUserName = builtins.head userNames;
+      userNames = builtins.seq userValidation (builtins.attrNames usersAttr);
 
       getUserAttrs =
         userName:
@@ -97,7 +117,7 @@ let
           userNix = userDir + "/user.nix";
           userJson = userDir + "/user.json";
         in
-        if userName == "r3j0" then
+        if userName == "r3j0" || userName == "r3j0-2" then
           r3j0User
         else if builtins.pathExists userJson then
           builtins.fromJSON (builtins.readFile userJson)
@@ -110,28 +130,22 @@ let
           };
 
       mkUser =
-        userItem:
+        userName: userConfig:
         let
-          userName = if builtins.isAttrs userItem then userItem.name else userItem;
-          extraUserAttrs = if builtins.isAttrs userItem then userItem else { };
           baseAttrs = getUserAttrs userName;
-          isPrimary = (userName == primaryUserName);
+          extraUserAttrs = removeAttrs userConfig [ "groups" ];
         in
         baseAttrs
         // extraUserAttrs
         // {
-          includes =
-            (baseAttrs.includes or [ ])
-            ++ (extraUserAttrs.includes or [ ])
-            ++ lib.optional isPrimary den.provides.primary-user;
+          inherit (userConfig) groups;
+          includes = (baseAttrs.includes or [ ]) ++ (extraUserAttrs.includes or [ ]);
         };
 
-      hostUsers = builtins.listToAttrs (
-        map (u: {
-          name = if builtins.isAttrs u then u.name else u;
-          value = mkUser u;
-        }) rawUsers
-      );
+      hostUsers = lib.mapAttrs (
+        userName: userConfig:
+        mkUser userName (if builtins.isAttrs userConfig then userConfig else { groups = [ ]; })
+      ) usersAttr;
 
       templateName =
         settings.template or (
@@ -179,6 +193,12 @@ let
           config = {
             networking.hostName = lib.mkForce name;
             networking.domain = lib.mkDefault domainName;
+            users.users = lib.mapAttrs (
+              _userName: userConfig:
+              lib.optionalAttrs (userConfig ? groups) {
+                extraGroups = userConfig.groups;
+              }
+            ) usersAttr;
           };
 
           options.settings = {
@@ -205,17 +225,12 @@ let
             users = lib.mkOption {
               type = lib.types.listOf lib.types.str;
               default = userNames;
-              description = "List of users for this host, where the first element is the primary user.";
+              description = "List of users for this host.";
             };
             user = lib.mkOption {
               type = lib.types.listOf lib.types.str;
               default = userNames;
               description = "Alias for settings.users.";
-            };
-            primaryUser = lib.mkOption {
-              type = lib.types.str;
-              default = primaryUserName;
-              description = "The primary user for this host (the first element of settings.users).";
             };
           };
         };
@@ -239,7 +254,6 @@ let
     // {
       settings.users = userNames;
       settings.user = userNames;
-      settings.primaryUser = primaryUserName;
     };
 
   hostsAttr = builtins.listToAttrs (

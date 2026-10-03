@@ -1,4 +1,9 @@
 {
   "template": "desktop",
-  "disk": "/dev/nvme0n1"
+  "disk": "/dev/nvme0n1",
+  "users": {
+    "r3j0": {
+      "groups": ["wheel", "networkmanager", "incus-admin"]
+    }
+  }
 }

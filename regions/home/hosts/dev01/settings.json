@@ -1,3 +1,13 @@
 {
-  "template": "devcontainer"
+  "template": "devcontainer",
+  "users": {
+    "r3j0": {
+      "groups": []
+    },
+    "r3j0-2": {
+      "groups": [
+        "wheel"
+      ]
+    }
+  }
 }

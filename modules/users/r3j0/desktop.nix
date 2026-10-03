@@ -6,7 +6,7 @@
 }:
 {
   den.aspects."r3j0".includes = [
-    (den.lib.policy.when ({ host, ... }: host.hasAspect r3x.roles.desktop) users.r3j0.desktop)
+    (r3x.hasRole r3x.roles.desktop users.r3j0.desktop)
   ];
 
   users.r3j0.desktop = {

@@ -1,6 +1,8 @@
 { den, lib, ... }:
 {
-  den.schema.user.includes = [ den._.mutual-provider ];
+  den.schema.user = {
+    includes = [ den._.mutual-provider ];
+  };
 
   den.default = {
     settings.region = lib.mkOption {
@@ -11,13 +13,7 @@
     settings.users = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ "r3j0" ];
-      description = "List of users for this host, where the first element is the primary user.";
-    };
-
-    settings.primaryUser = lib.mkOption {
-      type = lib.types.str;
-      default = "r3j0";
-      description = "The primary user for this host (the first element of settings.users).";
+      description = "List of users for this host.";
     };
 
     nixos = {
