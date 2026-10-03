@@ -11,9 +11,6 @@
       users.r3j0.helix
       (r3x.hasRole r3x.roles.devshell users.r3j0.devshell)
       (r3x.hasRole r3x.roles.desktop users.r3j0.desktop)
-      (den.lib.policy.when ({ host, ... }: host.hasAspect r3x.services.incus) {
-        nixos.users.users."r3j0-2".extraGroups = [ "incus-admin" ];
-      })
     ];
 
     homeManager =
@@ -25,7 +22,6 @@
           enableDefaultConfig = false;
           settings = {
             "*" = {
-              IdentitiesOnly = "yes";
               PasswordAuthentication = "no";
               KbdInteractiveAuthentication = "no";
               IdentityFile = [

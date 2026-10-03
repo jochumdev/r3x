@@ -7,9 +7,6 @@
   den.aspects."r3j0" = {
     includes = [
       r3x.everywhere
-      (den.lib.policy.when ({ host, ... }: host.hasAspect r3x.services.incus) {
-        nixos.users.users."r3j0".extraGroups = [ "incus-admin" ];
-      })
     ];
 
     homeManager =
@@ -21,7 +18,6 @@
           enableDefaultConfig = false;
           settings = {
             "*" = {
-              IdentitiesOnly = "yes";
               PasswordAuthentication = "no";
               KbdInteractiveAuthentication = "no";
               IdentityFile = [
