@@ -10,7 +10,7 @@ let
       user.email = user.email or "${user.userName}@example.org";
       revsets.log = "default()";
       revset-aliases = {
-        "trunk()" = "main@origin";
+        "trunk()" = "coalesce(present(main@origin), present(main), present(master@origin), present(master), root())";
         "compared_to_trunk()" = "(trunk()..@):: | (trunk()..@)-";
         "immutable_heads()" = "builtin_immutable_heads() | remote_bookmarks()";
         "closest_bookmark(to)" = "heads(::to & bookmarks())";

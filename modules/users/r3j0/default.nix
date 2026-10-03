@@ -21,11 +21,12 @@
           enableDefaultConfig = false;
           settings = {
             "*" = {
+              IdentitiesOnly = "yes";
+              PasswordAuthentication = "no";
+              KbdInteractiveAuthentication = "no";
               IdentityFile = [
                 "~/.ssh/id_ed25519_sk"
                 "~/.ssh/id_ed25519_sk_2"
-                "~/.ssh/id_ed25519_sk_backup"
-                "~/.ssh/id_ed25519"
               ];
             };
           };
@@ -39,6 +40,7 @@
         programs.jujutsu.settings = {
           signing.key = lib.mkForce "~/.ssh/id_ed25519_sk.pub";
           templates.commit_trailers = "format_signed_off_by_trailer(self)";
+          git.subprocess = true;
         };
       };
 
@@ -68,6 +70,8 @@
               "media"
             ];
           };
+
+          programs.ssh.enableAskPassword = false;
         }
 
         (lib.optionalAttrs (!host.iso) (
