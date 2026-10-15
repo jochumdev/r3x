@@ -1,13 +1,5 @@
 { den, lib, ... }:
 let
-  r3j0User = {
-    fullName = "René Jochum";
-    description = "René Jochum";
-    email = "rene@jochum.dev";
-    editor = "hx";
-    diffEditor = "hx";
-  };
-
   regionsDir = ../regions;
   regionEntries =
     if builtins.pathExists regionsDir then
@@ -51,53 +43,24 @@ let
         else
           { };
 
-      # Supports settings.json, settings.nix, settings/settings.json, or settings/default.nix
       hostSettings =
         if builtins.pathExists (dir + "/settings.json") then
           builtins.fromJSON (builtins.readFile (dir + "/settings.json"))
-        else if builtins.pathExists (dir + "/settings.nix") then
-          import (dir + "/settings.nix")
-        else if builtins.pathExists (settingsDir + "/settings.json") then
-          builtins.fromJSON (builtins.readFile (settingsDir + "/settings.json"))
-        else if builtins.pathExists (settingsDir + "/default.nix") then
-          import (settingsDir + "/default.nix")
         else
           { };
 
       # Merges host settings on top of regional settings
       settings = lib.recursiveUpdate regionSettings hostSettings;
 
-      flatSettings = if settings ? settings then (settings // settings.settings) else settings;
-
-      rawUsers =
-        if flatSettings ? users then
-          flatSettings.users
-        else if flatSettings ? user then
-          flatSettings.user
-        else
-          { r3j0 = { }; };
-
       usersAttr =
-        if builtins.isAttrs rawUsers then
-          rawUsers
-        else if builtins.isList rawUsers then
-          builtins.listToAttrs (
-            map (
-              u:
-              if builtins.isAttrs u then
-                {
-                  inherit (u) name;
-                  value = removeAttrs u [ "name" ];
-                }
-              else
-                {
-                  name = u;
-                  value = { };
-                }
-            ) rawUsers
-          )
+        if settings ? users then
+          settings.users
         else
-          throw "Host '${targetName}': settings.users must be an attribute set or list of users";
+          {
+            nixos = {
+              groups = [ ];
+            };
+          };
 
       userValidation =
         assert lib.assertMsg (builtins.isAttrs usersAttr)
@@ -114,20 +77,9 @@ let
         userName:
         let
           userDir = ../modules/users + "/${userName}";
-          userNix = userDir + "/user.nix";
-          userJson = userDir + "/user.json";
+          userJson = userDir + "/settings.json";
         in
-        if userName == "r3j0" || userName == "r3j0-2" then
-          r3j0User
-        else if builtins.pathExists userJson then
-          builtins.fromJSON (builtins.readFile userJson)
-        else if builtins.pathExists userNix then
-          import userNix
-        else
-          {
-            fullName = userName;
-            description = userName;
-          };
+        builtins.fromJSON (builtins.readFile userJson);
 
       mkUser =
         userName: userConfig:
@@ -162,37 +114,19 @@ let
         den.aspects.${templateName}
           or (throw "Host '${targetName}' specified unknown template '${templateName}'");
 
-      diskDevice =
-        settings.disk or (
-          let
-            diskFile = settingsDir + "/disk";
-          in
-          if builtins.pathExists diskFile then lib.removeSuffix "\n" (builtins.readFile diskFile) else null
-        );
-
-      regionName = settings.region or region;
-
-      domainName = settings.domain or "${regionName}.jochum.dev";
-
       regionModules = lib.optional (builtins.pathExists (regionDir + "/default.nix")) (
-        let
-          mod = import (regionDir + "/default.nix");
-        in
-        if builtins.isAttrs mod && (mod ? os || mod ? nixos) then mod else { os = mod; }
+        import (regionDir + "/default.nix")
       );
 
       extraModules = lib.optional (builtins.pathExists (settingsDir + "/default.nix")) (
-        let
-          mod = import (settingsDir + "/default.nix");
-        in
-        if builtins.isAttrs mod && (mod ? os || mod ? nixos) then mod else { os = mod; }
+        import (settingsDir + "/default.nix")
       );
 
       settingsAspect = {
         nixos = {
           config = {
             networking.hostName = lib.mkForce name;
-            networking.domain = lib.mkDefault domainName;
+            networking.domain = lib.mkDefault settings.domain;
             users.users = lib.mapAttrs (
               _userName: userConfig:
               lib.optionalAttrs (userConfig ? groups) {
@@ -204,11 +138,11 @@ let
           options.settings = {
             region = lib.mkOption {
               type = lib.types.nullOr lib.types.str;
-              default = regionName;
+              default = settings.region;
             };
             disk = lib.mkOption {
               type = lib.types.nullOr lib.types.str;
-              default = diskDevice;
+              default = settings.disk;
             };
             template = lib.mkOption {
               type = lib.types.str;
@@ -220,17 +154,12 @@ let
             };
             domain = lib.mkOption {
               type = lib.types.nullOr lib.types.str;
-              default = domainName;
+              default = settings.domain;
             };
             users = lib.mkOption {
               type = lib.types.listOf lib.types.str;
               default = userNames;
               description = "List of users for this host.";
-            };
-            user = lib.mkOption {
-              type = lib.types.listOf lib.types.str;
-              default = userNames;
-              description = "Alias for settings.users.";
             };
           };
         };
@@ -244,16 +173,6 @@ let
       ]
       ++ regionModules
       ++ extraModules;
-    }
-    // lib.optionalAttrs (diskDevice != null) {
-      settings.disk.device = diskDevice;
-    }
-    // lib.optionalAttrs (regionName != null) {
-      settings.region = regionName;
-    }
-    // {
-      settings.users = userNames;
-      settings.user = userNames;
     };
 
   hostsAttr = builtins.listToAttrs (

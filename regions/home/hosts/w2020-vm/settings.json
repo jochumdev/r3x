@@ -2,10 +2,8 @@
   "template": "desktop-vm",
   "disk": "/dev/sda",
   "users": {
-    "users": {
-      "r3j0": {
-        "groups": ["wheel", "networkmanager", "incus-admin"]
-      }
+    "r3j0": {
+      "groups": ["wheel", "networkmanager", "incus-admin"]
     }
   }
 }

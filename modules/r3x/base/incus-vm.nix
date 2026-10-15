@@ -3,12 +3,15 @@
   r3x.base.incus-vm = {
     nixos =
       {
+        pkgs,
         config,
         modulesPath,
         ...
       }:
       {
         imports = [ (modulesPath + "/virtualisation/incus-virtual-machine.nix") ];
+
+        boot.kernelPackages = pkgs.linuxPackages_latest;
 
         fileSystems."/persist" = {
           device = lib.mkDefault "incus_persist";

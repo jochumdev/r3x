@@ -1,5 +1,4 @@
 {
-  den,
   r3x,
   ...
 }:
@@ -10,9 +9,21 @@
     ];
 
     homeManager =
-      { lib, ... }:
+      { osConfig, lib, ... }:
+      let
+        regionDir =
+          if osConfig ? settings && osConfig.settings ? region && osConfig.settings.region != null then
+            osConfig.settings.region
+          else
+            "home";
+        containersConfPath =
+          ../../../regions + "/${regionDir}/users/r3j0/dots/config/containers/containers.conf";
+      in
       {
         xdg.configFile."bat/config".source = ./dots/config/bat/config;
+        xdg.configFile."containers/containers.conf" = lib.mkIf (builtins.pathExists containersConfPath) {
+          source = containersConfPath;
+        };
         programs.ssh = {
           enable = true;
           enableDefaultConfig = false;
@@ -58,6 +69,7 @@
       lib.mkMerge [
         {
           users.users."r3j0" = {
+            linger = true;
             openssh.authorizedKeys.keyFiles = [
               ./authorized_keys
             ];

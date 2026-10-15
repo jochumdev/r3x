@@ -1,8 +1,13 @@
 {
+  r3x,
   ...
 }:
 {
   r3x.development.go = {
+    include = [
+      r3x.development.gcc
+    ];
+
     homeManager =
       { config, pkgs, ... }:
       {

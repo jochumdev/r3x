@@ -33,8 +33,6 @@
         ...
       }:
       let
-        cachy-kernel-x86_64-v3 =
-          inputs.nix-cachyos-kernel.legacyPackages.x86_64-linux.linuxPackages-cachyos-bore-lto-x86_64-v3;
         regionDir =
           if config ? settings && config.settings ? region && config.settings.region != null then
             config.settings.region
@@ -63,7 +61,6 @@
         users.users.root.initialHashedPassword = lib.mkForce null;
         security.pam.services.login.allowNullPassword = lib.mkForce false;
 
-        boot.kernelPackages = cachy-kernel-x86_64-v3;
         powerManagement.cpuFreqGovernor = "performance";
 
         boot.kernelModules = [ "kvm-amd" ];

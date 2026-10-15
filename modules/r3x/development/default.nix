@@ -10,7 +10,13 @@
       r3x.development.direnv
       r3x.development.nix-ld
       r3x.development.go
+      r3x.development.incus
     ];
+
+    nixos = {
+      virtualisation.containers.enable = true;
+    };
+
     homeManager =
       { pkgs, ... }:
       {
