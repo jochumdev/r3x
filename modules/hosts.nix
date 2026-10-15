@@ -32,14 +32,10 @@ let
       targetName = "${region}-${name}";
       regionDir = regionsDir + "/${region}";
       dir = regionDir + "/hosts/${name}";
-      settingsDir = dir + "/settings";
 
-      # Supports regions/${region}/settings.json or settings.nix
       regionSettings =
         if builtins.pathExists (regionDir + "/settings.json") then
           builtins.fromJSON (builtins.readFile (regionDir + "/settings.json"))
-        else if builtins.pathExists (regionDir + "/settings.nix") then
-          import (regionDir + "/settings.nix")
         else
           { };
 
@@ -76,8 +72,7 @@ let
       getUserAttrs =
         userName:
         let
-          userDir = ../modules/users + "/${userName}";
-          userJson = userDir + "/settings.json";
+          userJson = regionDir + "/users" + "/${userName}" + "/settings.json";
         in
         builtins.fromJSON (builtins.readFile userJson);
 
@@ -99,16 +94,7 @@ let
         mkUser userName (if builtins.isAttrs userConfig then userConfig else { groups = [ ]; })
       ) usersAttr;
 
-      templateName =
-        settings.template or (
-          let
-            templateFile = settingsDir + "/template";
-          in
-          if builtins.pathExists templateFile then
-            lib.removeSuffix "\n" (builtins.readFile templateFile)
-          else
-            "devcontainer"
-        );
+      templateName = settings.template or "devcontainer";
 
       aspect =
         den.aspects.${templateName}
@@ -118,8 +104,8 @@ let
         import (regionDir + "/default.nix")
       );
 
-      extraModules = lib.optional (builtins.pathExists (settingsDir + "/default.nix")) (
-        import (settingsDir + "/default.nix")
+      extraModules = lib.optional (builtins.pathExists (dir + "/default.nix")) (
+        import (dir + "/default.nix")
       );
 
       settingsAspect = {
