@@ -1,4 +1,4 @@
-{ r3x, ... }:
+{ lib, r3x, ... }:
 {
   r3x.graphical.niri-cosmic = {
     includes = [
@@ -21,6 +21,17 @@
         environment.systemPackages = with pkgs; [
           cosmic-ext-extra-sessions
         ];
+
+        xdg.portal = {
+          enable = true;
+          configPackages = [ pkgs.xdg-desktop-portal-gtk ];
+          config.niri = {
+            default = lib.mkForce [
+              "gtk"
+            ];
+            "org.freedesktop.impl.portal.Secret" = "gnome-keyring";
+          };
+        };
       };
   };
 }
