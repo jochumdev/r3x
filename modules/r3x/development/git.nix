@@ -36,7 +36,8 @@
             ignores = [
               ".DS_Store"
               "*.swp"
-              ".direnv"
+              ".direnv/"
+              "work/"
               ".envrc"
               ".envrc.local"
               ".env"
